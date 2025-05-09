@@ -15,7 +15,7 @@ This project aims to implement an automated workflow for reading numerical value
 
 ## ✅ What Has Been Done (Kickstart)
 
-- [ ]Installed and configured **Nextcloud** on a local Linux server.
+- [x] Installed and configured **Nextcloud** on a local Linux server.
 - [ ] Uploaded sample **photos** of counters manually.
 - [ ] Investigated **workflow automation options** in Nextcloud:
   - [Nextcloud Flow](https://nextcloud.com/workflow/)
