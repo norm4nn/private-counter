@@ -16,13 +16,98 @@ This project aims to implement an automated workflow for reading numerical value
 ## ✅ What Has Been Done (Kickstart)
 
 - [x] Installed and configured **Nextcloud** on a local Linux server.
-- [ ] Uploaded sample **photos** of counters manually.
-- [ ] Investigated **workflow automation options** in Nextcloud:
+- [x] Uploaded sample **photos** of counters manually.
+- [x] Investigated **workflow automation options** in Nextcloud:
   - [Nextcloud Flow](https://nextcloud.com/workflow/)
   - Webhook triggers
   - Cron-based or filesystem-based watchers
 
 ---
+
+## 🚀 Installation and Startup
+
+### ✅ Requirements
+
+- Linux with shell access (bash)
+- Python 3.10+
+- Redis (locally or in a container)
+- Nextcloud with a mounted image folder, e.g., `/mnt/ncdata/admin/files/Photos`
+
+---
+
+### 🧰 1. Clone the repository
+
+```bash
+git clone https://github.com/norm4nn/private-counter.git
+cd private-counter
+```
+
+---
+
+### 🧪 2. Create and activate the virtual environment
+
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+---
+
+### 🔧 3. Start Redis (if not running)
+
+```bash
+redis-server --daemonize yes
+```
+
+---
+
+### ⚙️ 4. Run the full system
+
+```bash
+./bin/start.sh
+```
+
+This will:
+- activate the virtual environment,
+- install dependencies (if missing),
+- start Redis (if not already running),
+- launch the RQ worker (in background),
+- start the image watcher (foreground).
+
+---
+
+### 📁 Monitored directory
+
+The watcher monitors:
+
+```
+/mnt/ncdata/admin/files/Photos
+```
+
+All `.jpg`, `.jpeg`, and `.png` images placed in this directory will be:
+- enqueued in Redis,
+- processed by the worker,
+- marked with a `.done` file upon completion.
+
+---
+
+### 📊 Check system activity
+
+```bash
+tail -f logs/watcher.log logs/worker.log
+```
+
+---
+
+### 🧹 Reset state (optional)
+
+```bash
+rm /mnt/ncdata/admin/files/Photos/*.done
+redis-cli DEL queued_files
+```
+
 
 ## 🧪 Expected Outcome
 
