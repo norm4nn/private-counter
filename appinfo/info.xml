@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<info>
+	<id>private_counter</id>
+	<name>PrivateCounter</name>
+	<summary>NextCloud extension to read counter meters</summary>
+	<description>
+	NextCloud ExApp that allows you to read counter meters and store them in a form of a CSV file.
+		Makes use of the Redis queue to process the data in the background, YOLOv8 for digits recognition,
+		and NextCloud's external app functionality to provide settings and interface.
+	</description>
+	<version>1.0.0</version>
+	<licence>MIT</licence>
+	<author homepage="https://github.com/patrykkozuch">Patryk Kożuch</author>
+	<author homepage="https://github.com/jarkol01">Jarosław Kołdun</author>
+	<author homepage="https://github.com/norm4nn">Szymon Mamoń</author>
+	<namespace>PrivateCounter</namespace>
+	<category>tools</category>
+	<website>https://github.com/norm4nn/private-counter</website>
+	<bugs>https://github.com/norm4nn/private-counter/issues</bugs>
+	<repository type="git">https://github.com/norm4nn/private-counter</repository>
+	<dependencies>
+		<nextcloud min-version="28" max-version="31"/>
+	</dependencies>
+	<external-app>
+		<routes>
+			<route>
+				<url>.*</url>
+				<verb>GET,POST,PUT,DELETE</verb>
+				<access_level>USER</access_level>
+				<headers_to_exclude>[]</headers_to_exclude>
+			</route>
+		</routes>
+	</external-app>
+</info>
