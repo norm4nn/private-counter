@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e
 
+WORKER_COUNT=1
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --workers)
+      WORKER_COUNT="$2"
+      shift 2
+      ;;
+    *)
+      shift
+      ;;
+  esac
+done
+
 # Ustal położenie katalogu projektu
 SCRIPT_DIR=$(cd "$(dirname "$0")" && pwd)
 PROJECT_DIR=$(dirname "$SCRIPT_DIR")
@@ -22,22 +35,13 @@ echo "[LSC] Installing dependencies..."
 ./venv/bin/pip install --upgrade pip
 ./venv/bin/pip install -r requirements.txt
 
-# 3. Uruchamiamy Redis jeśli nie działa
-if ! pgrep -x "redis-server" > /dev/null; then
-    echo "[LSC] Starting Redis server..."
-    redis-server --daemonize yes
-else
-    echo "[LSC] Redis is already running."
-fi
 
-# 4. Uruchamiamy RQ worker w tle
-echo "[LSC] Starting RQ worker in background..."
-nohup ./venv/bin/python src/run_worker.py > logs/worker.log 2>&1 &
+# 3. Uruchamiamy RQ worker w tle
+echo "[LSC] Starting $WORKER_COUNT RQ workers in background..."
+for i in $(seq 1 ${WORKER_COUNT:-1}); do
+    nohup python $PROJECT_DIR/lib/run_worker.py > logs/worker_$i.log 2>&1 &
+done
 
-# 5. Uruchamiamy watcher w tle
-echo "[LSC] Starting directory watcher in background..."
-nohup ./venv/bin/python src/watcher.py > logs/watcher.log 2>&1 &
-
-# 6. Potwierdzenie
+# Potwierdzenie
 echo "[LSC] All components started. Logs in ./logs/"
 
