@@ -1,4 +1,6 @@
-redis
-rq==1.16
-watchdog
-
+redis==6.2.0
+rq==2.4.0
+pillow==11.2.1
+nc-py-api==0.20.2
+fastapi==0.115.14
+ultralytics==8.3.162
