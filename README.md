@@ -2,7 +2,9 @@
 
 ## 🎯 Project Goals
 
-This project aims to implement an automated workflow for reading numerical values from photos of utility counters (electricity, water, etc.) using a self-hosted Nextcloud instance. The photos are captured using a smartphone and automatically uploaded to Nextcloud, ensuring local control and privacy.
+This project aims to implement an automated workflow for reading numerical values from photos of utility counters (
+electricity, water, etc.) using a self-hosted Nextcloud instance. The photos are captured using a smartphone and
+automatically uploaded to Nextcloud, ensuring local control and privacy.
 
 ### 🧠 Core Idea
 
@@ -13,14 +15,17 @@ This project aims to implement an automated workflow for reading numerical value
 
 ---
 
-## ✅ What Has Been Done (Kickstart)
+## ✅ What Has Been Done
 
 - [x] Installed and configured **Nextcloud** on a local Linux server.
 - [x] Uploaded sample **photos** of counters manually.
 - [x] Investigated **workflow automation options** in Nextcloud:
-  - [Nextcloud Flow](https://nextcloud.com/workflow/)
-  - Webhook triggers
-  - Cron-based or filesystem-based watchers
+    - [Nextcloud Flow](https://nextcloud.com/workflow/)
+    - Webhook triggers
+    - Cron-based or filesystem-based watchers
+- [x] Trained custom version of **YOLOv8** for digit detection
+- [x] Implemented Redis-based **task queue** for processing images
+- [x] Integrated task queue through a custom **NextCloud ExApp** 
 
 ---
 
@@ -61,60 +66,75 @@ pip install -r requirements.txt
 redis-server --daemonize yes
 ```
 
----
-
-### ⚙️ 4. Run the full system
+or if using Docker:
 
 ```bash
-./bin/start.sh
+docker compose up -d redis
+```
+
+---
+
+### ⚙️ 4. Run the startup script
+
+```bash
+export APP_ID=private_counter
+export APP_PORT=9031
+export APP_SECRET=12345
+export APP_VERSION=1
+export NEXTCLOUD_USER='admin'
+export NEXTCLOUD_URL='http://127.0.0.1:8080'
+./bin/start.sh [--workers <num_workers>]
 ```
 
 This will:
-- activate the virtual environment,
+
+- create and activate the virtual environment,
 - install dependencies (if missing),
-- start Redis (if not already running),
-- launch the RQ worker (in background),
-- start the image watcher (foreground).
+- launch the RQ workers (in background),
 
 ---
+
+### Start APP:
+
+```bash
+export APP_ID=private_counter
+export APP_PORT=9031
+export APP_SECRET=12345
+export APP_VERSION=1
+export NEXTCLOUD_USER='admin'
+export NEXTCLOUD_URL='http://127.0.0.1:8080'
+cd lib && uvicorn main:APP --port 9031 --reload
+```
+
+Then register the app in Nextcloud:
+
+```bash
+make register
+```
+
+and go to the Apps and enable the "Private Counter" app.
 
 ### 📁 Monitored directory
 
-The watcher monitors:
-
-```
-/mnt/ncdata/admin/files/Photos
-```
-
-All `.jpg`, `.jpeg`, and `.png` images placed in this directory will be:
-- enqueued in Redis,
-- processed by the worker,
-- marked with a `.done` file upon completion.
-
----
+The following settings can be adjusted on ExApp Settings page in Nextcloud:
+- Directory to monitor for new images
+- Time interval for checking new images
+- Enabled/disabled state of the monitoring
 
 ### 📊 Check system activity
 
 ```bash
-tail -f logs/watcher.log logs/worker.log
+tail -f logs/worker_1.log
 ```
 
 ---
 
-### 🧹 Reset state (optional)
-
-```bash
-rm /mnt/ncdata/admin/files/Photos/*.done
-redis-cli DEL queued_files
-```
-
-
 ## 🧪 Expected Outcome
 
 - 📦 A GitHub repository with:
-  - This `README.md`
-  - A directory for scripts and ML/OpenCV logic
-  - Defined [issues](https://github.com/) to track individual tasks
+    - This `README.md`
+    - A directory for scripts and ML/OpenCV logic
+    - Defined [issues](https://github.com/) to track individual tasks
 - 🧾 Counter readings exported to a structured format (CSV, JSON, or a small database)
 - 🧠 Basic counter detection & digit extraction workflow
 - 🧪 Demo with large dataset of pre-existing photos
@@ -131,14 +151,14 @@ Smartphone (Nextcloud App)
      Nextcloud Server
      (Linux, CPU only)
           │
-          ├── Manual/Auto upload
-          ├── Workflow Trigger (Flow / inotify / cron)
           ▼
-  Counter Reader Script (OpenCV or local ML)
+     Nextcloud ExApp
+          ├── Workflow (Asyncio + Redis)
+          ▼
+  Counter Reader Script (YOLOv8)
           │
           ▼
    Parsed readings saved to:
-   - CSV / JSON
+   - CSV
    - Local DB
-   - Dashboard (optional)
-# private-counter
+```
